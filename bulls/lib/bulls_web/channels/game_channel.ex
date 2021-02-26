@@ -4,14 +4,14 @@ defmodule BullsWeb.GameChannel do
   # Credit to Nat Tuck's 07 Lecture notes
   #https://github.com/NatTuck/scratch-2021-01/blob/master/notes-4550/07-phoenix/notes.md
   @impl true
-  def join("game:" <> name, payload, socket) do
+  def join("game:" <> game_name, payload, socket) do
     if authorized?(payload) do
-      Bulls.GameServer.start(name)
+      Bulls.GameServer.start(game_name)
       socket = socket
-      |> assign(:name, name)
+      |> assign(:name, game_name)
       |> assign(:user, "")
 
-      game = Bulls.GameServer.peek(name)
+      game = Bulls.GameServer.peek(game_name)
       view = Bulls.Game.view(game, "")
       #socket = assign(socket, :game, game)
       {:ok, view, socket}
@@ -49,11 +49,11 @@ defmodule BullsWeb.GameChannel do
   end
 
   @impl true
-  def handle_in("login", %{"name" => user}, socket) do
-    socket = assign(socket, :user, user)
+  def handle_in("login", %{"game_name" => game_name, "user_name" => user_name}, socket) do
+    socket = assign(socket, :user, user_name)
     view = socket.assigns[:name]
     |> Bulls.GameServer.peek()
-    |> Bulls.Game.view(user)
+    |> Bulls.Game.view(user_name)
     {:reply, {:ok, view}, socket}
   end
 

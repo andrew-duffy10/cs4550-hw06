@@ -15,7 +15,7 @@ import {Socket} from "phoenix"
 let socket = new Socket("/socket", {params: {token: ""}})
 socket.connect();
 
-let channel = socket.channel("game:1",{});
+//let channel = socket.channel("game:1",{});
 
 let state = {
     name: "",
@@ -25,9 +25,11 @@ let state = {
     text: "",
     status: "",
     playing: true,
+    players: [],
+    ready: 0
 };
+let channel = null;
 let callback = null;
-
 
 function state_update(new_state) {
     console.log("New state:",new_state);
@@ -56,19 +58,20 @@ export function ch_reset() {
          });
 }
 
-export function ch_login(name) {
-    channel.push("login",{name: name})
+export function ch_login(user_name,game_name) {
+    channel = socket.channel("game:"+game_name,{})
+    channel.join()
+       .receive("ok",resp => {state_update(resp); channel.on("view",state_update);})
+       .receive("error",resp => {console.log("Unable to join",resp)});
+
+    channel.push("login",{game_name: game_name, user_name: user_name})
            .receive("ok", state_update)
            .receive("error",resp => {
            console.log("Unable to push", resp)
            });
 }
 
-channel.join()
-       .receive("ok",state_update)
-       .receive("error",resp => {console.log("Unable to join",resp)});
 
-channel.on("view",state_update);
 
 export default socket
 

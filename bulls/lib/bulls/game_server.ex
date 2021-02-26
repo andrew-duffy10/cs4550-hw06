@@ -54,12 +54,12 @@ defmodule Bulls.GameServer do
     {:reply,game,game}
   end
 
-  def handle_call({:peek, _name}, _from, game) do
+  def handle_call({:peek, name}, _from, game) do
     {:reply,game,game}
   end
 
   def handle_info(:pook, game) do
-    game = Bulls.Game.make_guess(game, "1234")
+    #game = Bulls.Game.make_guess(game, "1234")
     BullsWeb.Endpoint.broadcast!(
     "game:1", #TODO FIX
     "view",

@@ -21,24 +21,52 @@
 // https://github.com/NatTuck/scratch-2021-01/blob/master/notes-4550/07-phoenix/notes.md
 
 import React, { useState, useEffect } from 'react';
-import { ch_join, ch_push, ch_reset } from './socket';
+import { ch_join, ch_push, ch_reset, ch_login } from './socket';
 
 function Login() {
-    const [username,setUsername] = useState("");
+
+    const [names, setNames] =useState({
+        username: "",
+        gamename: ""
+    });
+    let {username, gamename} = names;
+
+    function check_values() {
+        if(!(gamename == "" || username == "")) {
+            ch_login(username,gamename);
+        }
+    }
 
     return (
     <div>
            <h1>Enter Username:</h1>
            <input type="text"
                 value = {username}
-                onChange ={(ev) => setUsername(ev.target.value)} />
-          <button onClick={() => ch_login(username)}>Enter</button>
+                onChange ={(ev) => setNames(
+                {username: ev.target.value, gamename: gamename})} />
+           <h1>Enter Gamename:</h1>
+           <input type="text"
+                value = {gamename}
+                onChange ={(ev) => setNames({username: username, gamename: ev.target.value})} />
+          <button onClick={() => check_values()}>Enter</button>
+    </div>
+    )
+}
+
+function Setup({state}) {
+    let {name, guesses, results, status, playing, players } = state;
+    return (
+    <div>
+           <h1>GameLobby</h1>
+           <p>{players}</p>
+           <button onClick={() => ch_login(username)}>Ready Up</button>
     </div>
     )
 }
 
 function Play({state}) {
-    let {name, guesses, results, status, playing } = state;
+    let {name, guesses, results, status, playing, players, ready } = state;
+    const [text,setText] = useState("");
 
     function makeGuess() {
         ch_push({numbers: text});
@@ -103,17 +131,23 @@ function Play({state}) {
     // Resets the game to default values
     function resetGame() {
         ch_reset();
-        guesses = [];
-        results = [];
-        status = "";
-        playing = true;
+
+        name= "",
+        guesses = [],
+        results= [],
+        status = "",
+        playing = true,
+        players = [],
+        ready = 0
 
     }
 
     return (
         <div className="Bulls">
             <h1>4digits</h1>
+            <h2>Username: {name}</h2>
             <p>
+
             <input type="text"
                 value={text}
                 onChange={updateText}
@@ -126,8 +160,9 @@ function Play({state}) {
             <button onClick={resetGame}>Reset</button>
             </p>
             <h2>{state.status}</h2>
-            <p>
+
             <table>
+            <tbody>
             <tr><th></th><th>Guess</th><th>Result</th></tr>
             <tr><td>1</td><td>{getVal(guesses,1)}</td><td>{getVal(results,1)}</td></tr>
             <tr><td>2</td><td>{getVal(guesses,2)}</td><td>{getVal(results,2)}</td></tr>
@@ -137,9 +172,9 @@ function Play({state}) {
             <tr><td>6</td><td>{getVal(guesses,6)}</td><td>{getVal(results,6)}</td></tr>
             <tr><td>7</td><td>{getVal(guesses,7)}</td><td>{getVal(results,7)}</td></tr>
             <tr><td>8</td><td>{getVal(guesses,8)}</td><td>{getVal(results,8)}</td></tr>
-
+            </tbody>
             </table>
-            </p>
+
 
         </div>
     );
@@ -153,8 +188,10 @@ function Bulls() {
         results: [],
         status: "",
         playing: true,
+        players: [],
+        ready: 0
     });
-    const [text,setText] = useState("");
+
 
     useEffect(() => {
         ch_join(setState);
@@ -164,12 +201,15 @@ function Bulls() {
 
     if (state.name == "") {
         body = <Login />;
-    } else {
-        body = <Play state={state} />;
+    } else if (state.ready != state.players.length){
+        body = <Setup state = {state} />;
+    }
+    else {
+        body = <Play state = {state} />;
     }
 
     return (
-        <div> <p>{state.name}</p>{body} </div>
+        <div>{body}</div>
     );
 
 }

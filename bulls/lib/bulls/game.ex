@@ -10,8 +10,11 @@ defmodule Bulls.Game do
       results: [],
       status: "",
       playing: true,
+      players: [],
+      ready: 0
     }
   end
+
 
   def make_guess(state,numbers) do
 
@@ -51,6 +54,7 @@ defmodule Bulls.Game do
 
 
   def view(state,name) do
+
     %{
     #word: word,
     #guesses: MapSet.to_list(state.guesses)
@@ -59,6 +63,8 @@ defmodule Bulls.Game do
       results: state.results,
       status: state.status,
       playing: state.playing,
+      players: state.players,
+      ready: 0
     }
   end
 
