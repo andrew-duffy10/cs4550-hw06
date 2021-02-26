@@ -25,12 +25,12 @@ defmodule Bulls.GameServer do
     name: reg(name))
   end
 
-  def reset(name) do
-    GenServer.call(reg(name), {:reset,name})
+  def reset(name,user_name) do
+    GenServer.call(reg(name), {:reset,name,user_name})
   end
 
-  def make_guess(name,numbers) do
-    GenServer.call(reg(name), {:make_guess, name, numbers})
+  def make_guess(name,numbers,user_name) do
+    GenServer.call(reg(name), {:make_guess, name, numbers,user_name})
   end
 
   def peek(name) do
@@ -45,19 +45,33 @@ defmodule Bulls.GameServer do
     GenServer.call(reg(name),{:ready_up,name,user_name})
   end
 
+  def observe(name,user_name) do
+    GenServer.call(reg(name),{:observe,name,user_name})
+  end
+
   def init(game) do
     Process.send_after(self(), :pook, 10_000)
     {:ok,game}
   end
 
-  def handle_call({:reset, name}, _from, game) do
-    game = Bulls.Game.new()
+  def leave(name, user_name) do
+    GenServer.call(reg(name), {:leave,name,user_name})
+  end
+
+  def handle_call({:leave, name, user_name}, _from, game) do
+    game = Bulls.Game.leave(game, user_name)
     Bulls.BackupAgent.put(name, game)
     {:reply,game,game}
   end
 
-  def handle_call({:make_guess, name,numbers}, _from, game) do
-    game = Bulls.Game.make_guess(game,numbers)
+  def handle_call({:reset, name, user_name}, _from, game) do
+    game = Bulls.Game.reset(game, user_name)
+    Bulls.BackupAgent.put(name, game)
+    {:reply,game,game}
+  end
+
+  def handle_call({:make_guess, name,numbers,user_name}, _from, game) do
+    game = Bulls.Game.make_guess(game,numbers,user_name)
     Bulls.BackupAgent.put(name, game)
     {:reply,game,game}
   end
@@ -70,6 +84,12 @@ defmodule Bulls.GameServer do
 
   def handle_call({:ready_up,name,user_name},_from,game) do
     game = Bulls.Game.ready_up(game,user_name)
+    Bulls.BackupAgent.put(name,game)
+    {:reply,game,game}
+  end
+
+  def handle_call({:observe,name,user_name},_from,game) do
+    game = Bulls.Game.observe(game,user_name)
     Bulls.BackupAgent.put(name,game)
     {:reply,game,game}
   end

@@ -21,7 +21,7 @@
 // https://github.com/NatTuck/scratch-2021-01/blob/master/notes-4550/07-phoenix/notes.md
 
 import React, { useState, useEffect } from 'react';
-import { ch_join, ch_push, ch_reset, ch_login, ch_ready_up, ch_leave } from './socket';
+import { ch_join, ch_push, ch_reset, ch_login, ch_ready_up, ch_leave, ch_observe } from './socket';
 
 function Login() {
 
@@ -57,9 +57,11 @@ function Setup({state}) {
     let {name, guesses, results, status, playing, players, ready, observers, game_started } = state;
     function isReady(player) {
     if (ready.indexOf(player) != -1) {
-    return "Yes";
+    return "Ready";
+    } else if (observers.indexOf(player) != -1) {
+    return "Observer";
     } else {
-    return "No";
+    return "Not Ready";
     }
     }
 
@@ -78,6 +80,7 @@ function Setup({state}) {
            </tbody>
            </table>
            <button onClick={() => ch_ready_up(name)}>Ready Up</button>
+           <button onClick={() => ch_observe(name)}>Become Observer</button>
     </div>
     )
 
@@ -88,7 +91,7 @@ function Play({state}) {
     const [text,setText] = useState("");
 
     function makeGuess() {
-        ch_push({numbers: text});
+        ch_push({numbers: text,user_name: name});
         setText("");
     }
 
@@ -122,6 +125,11 @@ function Play({state}) {
         }
     }
 
+    function makePass() {
+        ch_push({numbers: "Pass",user_name: name});
+        setText("");
+    }
+
     // Counts the number of bulls and cows are present in the current guess (if valid).
     // Clears the textbox and updates our state arrays.
 
@@ -132,7 +140,7 @@ function Play({state}) {
             return
         }
 
-        ch_push({numbers: text});
+        ch_push({numbers: text,user_name: name});
         setText("");
 
 
@@ -149,30 +157,63 @@ function Play({state}) {
 
     // Resets the game to default values
     function resetGame() {
-        ch_reset();
+        ch_reset(name);
 
-        name= "",
-        guesses = [],
-        results= [],
-        status = "",
-        playing = true,
-        players = [],
-        ready = 0
+        name= "";
+        guesses = [];
+        results= [];
+        status = "";
+        playing = true;
+        //players= [];
+        //ready= [];
+        //observers= [];
+        //game_started= false;
 
     }
 
     function leaveGame() {
-        ch_leave();
+        ch_leave(name);
 
-        name= "",
-        guesses = [],
-        results= [],
-        status = "",
-        playing = true,
-        players = [],
-        ready = 0
+        name= "";
+        guesses = [];
+        results= [];
+        status = "";
+        playing = true;
+        players= [];
+        ready= [];
+        observers= [];
+        game_started= false;
 
     }
+    function isObserver() {
+     return (observers.indexOf(name) != -1)
+    }
+    let pi = 0
+    let turn = 1
+    const playerlist = [];
+    for (const [index, value] of guesses.entries()) {
+        playerlist.push(<tr><td>{getVal(ready,pi+1)}</td><td>{turn}</td><td>{getVal(guesses,index+1)}</td><td>{getVal(results,index+1)}</td></tr>)
+        if ((pi + 1) == players.length) {
+           turn = turn + 1
+        }
+        pi = (pi+1)%(players.length)
+    }
+    //const playerlist_flat =
+    //const playerlist = guesses.map((player) =>
+    //<tr><td>1</td><td>{getVal(guesses,1)}</td><td>{getVal(results,1)}</td></tr>);
+    //<tr><td>{player}</td><td>{isReady(player)}</td></tr>);
+
+    /*
+                <tr><td>1</td><td>{getVal(guesses,1)}</td><td>{getVal(results,1)}</td></tr>
+            <tr><td>2</td><td>{getVal(guesses,2)}</td><td>{getVal(results,2)}</td></tr>
+            <tr><td>3</td><td>{getVal(guesses,3)}</td><td>{getVal(results,3)}</td></tr>
+            <tr><td>4</td><td>{getVal(guesses,4)}</td><td>{getVal(results,4)}</td></tr>
+            <tr><td>5</td><td>{getVal(guesses,5)}</td><td>{getVal(results,5)}</td></tr>
+            <tr><td>6</td><td>{getVal(guesses,6)}</td><td>{getVal(results,6)}</td></tr>
+            <tr><td>7</td><td>{getVal(guesses,7)}</td><td>{getVal(results,7)}</td></tr>
+            <tr><td>8</td><td>{getVal(guesses,8)}</td><td>{getVal(results,8)}</td></tr>
+            */
+
 
     return (
         <div className="Bulls">
@@ -185,12 +226,16 @@ function Play({state}) {
                 onChange={updateText}
                 onKeyPress={keyPress}
                 disabled={!playing}/>
-            <button onClick={makeGuess} disabled={!state.playing}>Guess</button>
+            <button onClick={makeGuess} disabled={!state.playing || isObserver()}>Guess</button>
+            </p>
+            <p>
+            <button onClick={makePass} disabled={isObserver()}>Pass</button>
             </p>
 
             <p>
-            <button onClick={resetGame}>Reset</button>
+            <button onClick={resetGame} disabled={isObserver()}>Reset</button>
             </p>
+
             <p>
             <button onClick={leaveGame}>Leave</button>
             </p>
@@ -198,15 +243,8 @@ function Play({state}) {
 
             <table>
             <tbody>
-            <tr><th></th><th>Guess</th><th>Result</th></tr>
-            <tr><td>1</td><td>{getVal(guesses,1)}</td><td>{getVal(results,1)}</td></tr>
-            <tr><td>2</td><td>{getVal(guesses,2)}</td><td>{getVal(results,2)}</td></tr>
-            <tr><td>3</td><td>{getVal(guesses,3)}</td><td>{getVal(results,3)}</td></tr>
-            <tr><td>4</td><td>{getVal(guesses,4)}</td><td>{getVal(results,4)}</td></tr>
-            <tr><td>5</td><td>{getVal(guesses,5)}</td><td>{getVal(results,5)}</td></tr>
-            <tr><td>6</td><td>{getVal(guesses,6)}</td><td>{getVal(results,6)}</td></tr>
-            <tr><td>7</td><td>{getVal(guesses,7)}</td><td>{getVal(results,7)}</td></tr>
-            <tr><td>8</td><td>{getVal(guesses,8)}</td><td>{getVal(results,8)}</td></tr>
+            <tr><th>Player</th><th>Turn</th><th>Guess</th><th>Result</th></tr>
+            {playerlist}
             </tbody>
             </table>
 
@@ -243,7 +281,7 @@ function Bulls() {
     }
     else if ((state.ready.length == state.players.length && state.ready.length != 0) || state.game_started){
         body = <Play state = {state} />;
-    } else if (game_started) {
+    } else {
         body = <Login />;
     }
 

@@ -29,6 +29,8 @@ let state = {
     ready: [],
     observers: [],
     game_started: false
+    current_guesses: []
+    current_results: []
 };
 let channel = null;
 let callback = null;
@@ -52,8 +54,8 @@ export function ch_push(guess) {
            .receive("error",resp => {console.log("Unable to push:",resp)});
 }
 
-export function ch_reset() {
-  channel.push("reset", {})
+export function ch_reset(user_name) {
+  channel.push("reset", {user_name: user_name})
          .receive("ok", state_update)
          .receive("error", resp => {
            console.log("Unable to push", resp)
@@ -68,10 +70,35 @@ export function ch_ready_up(user_name) {
            });
 }
 
-export function ch_leave() {
-    channel = null
-    // TODO update
+export function ch_observe(user_name) {
+    channel.push("observe",{user_name: user_name})
+           .receive("ok", state_update)
+           .receive("error",resp => {
+           console.log("Unable to push", resp)
+           });
 }
+
+export function ch_leave(user_name) {
+   channel.push("leave",{user_name: user_name})
+           .receive("ok", state_update({
+    name: "",
+    secret: "",
+    guesses: [],
+    results: [],
+    text: "",
+    status: "",
+    playing: true,
+    players: [],
+    ready: [],
+    observers: [],
+    game_started: false
+    }))
+           .receive("error",resp => {
+           console.log("Unable to push", resp)
+           });
+
+}
+
 
 export function ch_login(user_name,game_name) {
     channel = socket.channel("game:"+game_name,{})

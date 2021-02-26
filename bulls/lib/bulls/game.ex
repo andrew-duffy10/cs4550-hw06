@@ -14,7 +14,39 @@ defmodule Bulls.Game do
       ready: [],
       observers: [],
       game_started: false
+      current_guesses: []
+      current_results: []
     }
+  end
+
+  def leave(state,user_name) do
+      #List.delete(state.players,user_name)
+      #List.delete(state.ready,user_name)
+      #List.delete(state.observers,user_name)
+      %{%{%{state | players: List.delete(state.players,user_name)}
+      | observers: List.delete(state.observers,user_name)}
+      | ready: List.delete(state.ready,user_name)}
+
+  end
+
+  def reset(state,user_name) do
+    if (Enum.member?(state.ready,user_name)) do
+    %{
+      secret: generateSecretCode(),
+      guesses: [],
+      results: [],
+      status: "",
+      playing: true,
+      players: state.players,
+      ready: [],
+      observers: [],
+      game_started: false
+      current_guesses: []
+      current_results: []
+    }
+    else
+    state
+  end
   end
 
   def add_player(state,user_name) do
@@ -27,19 +59,34 @@ defmodule Bulls.Game do
   end
 
   def ready_up(state,user_name) do
-    if Enum.member?(state.ready,user_name) || Enum.member?(state.observers,user_name) do
-      state
-      else
-      if (length(state.ready) + length(state.observers)) == (length(state.players)-1) do
-        %{%{state | game_started: true} | ready: [user_name | state.ready]}
+       if ((length(List.delete(state.ready,user_name)) + length(List.delete(state.observers,user_name))) >= (length(state.players)-1)) do
+          %{%{%{%{state | game_started: true} | ready: List.delete(state.ready,user_name)}
+          | observers: List.delete(state.observers,user_name)}
+          | ready: [user_name | state.ready]}
         else
-        %{state | ready: [user_name | state.ready]}
+          %{%{%{state | ready: List.delete(state.ready,user_name)}
+          | observers: List.delete(state.observers,user_name)}
+          | ready: [user_name | state.ready]}
       end
-    end
+  end
+
+  def observe(state,user_name) do
+      if ((length(List.delete(state.ready,user_name)) + length(List.delete(state.observers,user_name))) >= (length(state.players)-1)) do
+          %{%{%{%{state | game_started: true} | ready: List.delete(state.ready,user_name)}
+          | observers: List.delete(state.observers,user_name)}
+          | observers: [user_name | state.observers]}
+        else
+          %{%{%{state | ready: List.delete(state.ready,user_name)}
+          | observers: List.delete(state.observers,user_name)}
+          | observers: [user_name | state.observers]}
+      end
+
   end
 
 
-  def make_guess(state,numbers) do
+  def make_guess(state,numbers,user_name) do
+    if (Enum.member?(state.ready,user_name)) do
+
 
     bulls = 0
 
@@ -62,14 +109,21 @@ defmodule Bulls.Game do
 
     out = to_string(elem(cow_bulls,0)) <> "A" <> to_string(elem(cow_bulls,1)) <> "B"
 
+    %{%{state | current_guesses: Keyword.put{state.current_guesses, :user_name, numbers}]} | current_results: Keyword.put{state.current_results,:user_name, out}}
+
+
      cond do
       word == state.secret ->
       %{%{%{%{state | guesses: [numbers  | state.guesses]} | results: [out | state.results]} | playing: false} | status: "You Won!"}
-      length(state.guesses) >= 7 ->
-      %{%{%{%{state | guesses: [numbers | state.guesses]} | results: [out | state.results]} | playing: false} | status: "You lost. The secret was " <> to_string(state.secret)}
+      #length(state.guesses) >= 7 ->
+      #%{%{%{%{state | guesses: [numbers | state.guesses]} | results: [out | state.results]} | playing: false} | status: "You lost. The secret was " <> to_string(state.secret)}
       true ->
       %{%{state | guesses: [numbers | state.guesses]} | results: [out | state.results]}
 
+      end
+
+      else
+      state
       end
   end
 

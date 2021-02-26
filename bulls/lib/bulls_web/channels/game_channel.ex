@@ -19,10 +19,26 @@ defmodule BullsWeb.GameChannel do
   end
 
   @impl true
-  def handle_in("guess", %{"numbers" => ll}, socket) do
+  def handle_in("guess", %{"numbers" => ll, "user_name" => user_name}, socket) do
     user = socket.assigns[:user]
     view = socket.assigns[:name]
-    |> Bulls.GameServer.make_guess(ll)
+    |> Bulls.GameServer.make_guess(ll,user_name)
+    |> Bulls.Game.view(user)
+    broadcast(socket,"view",view)
+
+    #game0 = socket.assigns[:game]
+    #game1 = Bulls.Game.make_guess(game0, ll)
+    #socket = assign(socket, :game, game1)
+    #view = Bulls.Game.view(game1)
+    #broadcast(socket,"view",view)
+    {:reply, {:ok, view}, socket}
+  end
+
+    @impl true
+  def handle_in("leave", %{"user_name" => user_name}, socket) do
+    user = socket.assigns[:user]
+    view = socket.assigns[:name]
+    |> Bulls.GameServer.leave(user_name)
     |> Bulls.Game.view(user)
     broadcast(socket,"view",view)
 
@@ -50,11 +66,22 @@ defmodule BullsWeb.GameChannel do
     {:reply, {:ok, view}, socket}
   end
 
-   @impl true
-  def handle_in("reset", _, socket) do
+    @impl true
+  def handle_in("observe", %{"user_name" => user_name}, socket) do
     user = socket.assigns[:user]
     view = socket.assigns[:name]
-    |> Bulls.GameServer.reset()
+    |> Bulls.GameServer.observe(user_name)
+    |> Bulls.Game.view(user)
+    broadcast(socket,"view",view)
+
+    {:reply, {:ok, view}, socket}
+  end
+
+   @impl true
+  def handle_in("reset", %{"user_name" => user_name}, socket) do
+    user = socket.assigns[:user]
+    view = socket.assigns[:name]
+    |> Bulls.GameServer.reset(user_name)
     |> Bulls.Game.view(user)
     broadcast(socket,"view",view)
 
