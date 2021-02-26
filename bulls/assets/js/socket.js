@@ -26,7 +26,9 @@ let state = {
     status: "",
     playing: true,
     players: [],
-    ready: 0
+    ready: [],
+    observers: [],
+    game_started: false
 };
 let channel = null;
 let callback = null;
@@ -56,6 +58,19 @@ export function ch_reset() {
          .receive("error", resp => {
            console.log("Unable to push", resp)
          });
+}
+
+export function ch_ready_up(user_name) {
+    channel.push("ready",{user_name: user_name})
+           .receive("ok", state_update)
+           .receive("error",resp => {
+           console.log("Unable to push", resp)
+           });
+}
+
+export function ch_leave() {
+    channel = null
+    // TODO update
 }
 
 export function ch_login(user_name,game_name) {

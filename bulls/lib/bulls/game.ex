@@ -11,8 +11,31 @@ defmodule Bulls.Game do
       status: "",
       playing: true,
       players: [],
-      ready: 0
+      ready: [],
+      observers: [],
+      game_started: false
     }
+  end
+
+  def add_player(state,user_name) do
+    if state.game_started do
+      %{%{state | observers: [user_name | state.observers]} | players: [user_name | state.players]}
+      else
+      %{state | players: [user_name | state.players]}
+      end
+
+  end
+
+  def ready_up(state,user_name) do
+    if Enum.member?(state.ready,user_name) || Enum.member?(state.observers,user_name) do
+      state
+      else
+      if (length(state.ready) + length(state.observers)) == (length(state.players)-1) do
+        %{%{state | game_started: true} | ready: [user_name | state.ready]}
+        else
+        %{state | ready: [user_name | state.ready]}
+      end
+    end
   end
 
 
@@ -64,7 +87,9 @@ defmodule Bulls.Game do
       status: state.status,
       playing: state.playing,
       players: state.players,
-      ready: 0
+      ready: state.ready,
+      observers: state.observers,
+      game_started: state.game_started
     }
   end
 

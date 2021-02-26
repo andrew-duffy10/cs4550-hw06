@@ -37,6 +37,14 @@ defmodule Bulls.GameServer do
     GenServer.call(reg(name),{:peek, name})
   end
 
+  def add_player(name,user_name) do
+    GenServer.call(reg(name),{:add_player,name,user_name})
+  end
+
+  def ready_up(name,user_name) do
+    GenServer.call(reg(name),{:ready_up,name,user_name})
+  end
+
   def init(game) do
     Process.send_after(self(), :pook, 10_000)
     {:ok,game}
@@ -51,6 +59,18 @@ defmodule Bulls.GameServer do
   def handle_call({:make_guess, name,numbers}, _from, game) do
     game = Bulls.Game.make_guess(game,numbers)
     Bulls.BackupAgent.put(name, game)
+    {:reply,game,game}
+  end
+
+  def handle_call({:add_player,name,user_name},_from,game) do
+    game = Bulls.Game.add_player(game,user_name)
+    Bulls.BackupAgent.put(name,game)
+    {:reply,game,game}
+  end
+
+  def handle_call({:ready_up,name,user_name},_from,game) do
+    game = Bulls.Game.ready_up(game,user_name)
+    Bulls.BackupAgent.put(name,game)
     {:reply,game,game}
   end
 

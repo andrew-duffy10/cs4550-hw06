@@ -21,7 +21,7 @@
 // https://github.com/NatTuck/scratch-2021-01/blob/master/notes-4550/07-phoenix/notes.md
 
 import React, { useState, useEffect } from 'react';
-import { ch_join, ch_push, ch_reset, ch_login } from './socket';
+import { ch_join, ch_push, ch_reset, ch_login, ch_ready_up, ch_leave } from './socket';
 
 function Login() {
 
@@ -54,18 +54,37 @@ function Login() {
 }
 
 function Setup({state}) {
-    let {name, guesses, results, status, playing, players } = state;
+    let {name, guesses, results, status, playing, players, ready, observers, game_started } = state;
+    function isReady(player) {
+    if (ready.indexOf(player) != -1) {
+    return "Yes";
+    } else {
+    return "No";
+    }
+    }
+
+    const playerlist = players.map((player) =>
+    <tr><td>{player}</td><td>{isReady(player)}</td></tr>);
+
+
     return (
     <div>
            <h1>GameLobby</h1>
-           <p>{players}</p>
-           <button onClick={() => ch_login(username)}>Ready Up</button>
+
+           <table>
+           <tbody>
+           <tr><th>Username</th><th>Ready?</th></tr>
+           {playerlist}
+           </tbody>
+           </table>
+           <button onClick={() => ch_ready_up(name)}>Ready Up</button>
     </div>
     )
+
 }
 
 function Play({state}) {
-    let {name, guesses, results, status, playing, players, ready } = state;
+    let {name, guesses, results, status, playing, players, ready, observers, game_started } = state;
     const [text,setText] = useState("");
 
     function makeGuess() {
@@ -142,6 +161,19 @@ function Play({state}) {
 
     }
 
+    function leaveGame() {
+        ch_leave();
+
+        name= "",
+        guesses = [],
+        results= [],
+        status = "",
+        playing = true,
+        players = [],
+        ready = 0
+
+    }
+
     return (
         <div className="Bulls">
             <h1>4digits</h1>
@@ -158,6 +190,9 @@ function Play({state}) {
 
             <p>
             <button onClick={resetGame}>Reset</button>
+            </p>
+            <p>
+            <button onClick={leaveGame}>Leave</button>
             </p>
             <h2>{state.status}</h2>
 
@@ -189,7 +224,9 @@ function Bulls() {
         status: "",
         playing: true,
         players: [],
-        ready: 0
+        ready: [],
+        observers: [],
+        game_started: false
     });
 
 
@@ -201,11 +238,13 @@ function Bulls() {
 
     if (state.name == "") {
         body = <Login />;
-    } else if (state.ready != state.players.length){
+    } else if (state.ready.length != state.players.length && !state.game_started){
         body = <Setup state = {state} />;
     }
-    else {
+    else if ((state.ready.length == state.players.length && state.ready.length != 0) || state.game_started){
         body = <Play state = {state} />;
+    } else if (game_started) {
+        body = <Login />;
     }
 
     return (

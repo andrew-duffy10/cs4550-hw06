@@ -34,6 +34,22 @@ defmodule BullsWeb.GameChannel do
     {:reply, {:ok, view}, socket}
   end
 
+    @impl true
+  def handle_in("ready", %{"user_name" => user_name}, socket) do
+    user = socket.assigns[:user]
+    view = socket.assigns[:name]
+    |> Bulls.GameServer.ready_up(user_name)
+    |> Bulls.Game.view(user)
+    broadcast(socket,"view",view)
+
+    #game0 = socket.assigns[:game]
+    #game1 = Bulls.Game.make_guess(game0, ll)
+    #socket = assign(socket, :game, game1)
+    #view = Bulls.Game.view(game1)
+    #broadcast(socket,"view",view)
+    {:reply, {:ok, view}, socket}
+  end
+
    @impl true
   def handle_in("reset", _, socket) do
     user = socket.assigns[:user]
@@ -52,8 +68,9 @@ defmodule BullsWeb.GameChannel do
   def handle_in("login", %{"game_name" => game_name, "user_name" => user_name}, socket) do
     socket = assign(socket, :user, user_name)
     view = socket.assigns[:name]
-    |> Bulls.GameServer.peek()
+    |> Bulls.GameServer.add_player(user_name)
     |> Bulls.Game.view(user_name)
+    broadcast(socket,"view",view)
     {:reply, {:ok, view}, socket}
   end
 
