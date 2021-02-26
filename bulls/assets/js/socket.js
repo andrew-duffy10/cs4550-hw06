@@ -28,9 +28,9 @@ let state = {
     players: [],
     ready: [],
     observers: [],
-    game_started: false
-    current_guesses: []
-    current_results: []
+    game_started: false,
+    current_guesses: [],
+    current_results: [],
 };
 let channel = null;
 let callback = null;
@@ -91,7 +91,9 @@ export function ch_leave(user_name) {
     players: [],
     ready: [],
     observers: [],
-    game_started: false
+    game_started: false,
+    current_guesses: [],
+    current_results: [],
     }))
            .receive("error",resp => {
            console.log("Unable to push", resp)

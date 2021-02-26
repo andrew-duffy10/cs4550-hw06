@@ -13,9 +13,9 @@ defmodule Bulls.Game do
       players: [],
       ready: [],
       observers: [],
-      game_started: false
-      current_guesses: []
-      current_results: []
+      game_started: false,
+      current_guesses: [],
+      current_results: [],
     }
   end
 
@@ -40,9 +40,9 @@ defmodule Bulls.Game do
       players: state.players,
       ready: [],
       observers: [],
-      game_started: false
-      current_guesses: []
-      current_results: []
+      game_started: false,
+      current_guesses: [],
+      current_results: [],
     }
     else
     state
@@ -109,18 +109,29 @@ defmodule Bulls.Game do
 
     out = to_string(elem(cow_bulls,0)) <> "A" <> to_string(elem(cow_bulls,1)) <> "B"
 
-    %{%{state | current_guesses: Keyword.put{state.current_guesses, :user_name, numbers}]} | current_results: Keyword.put{state.current_results,:user_name, out}}
+    if (length(state.current_guesses) >= ((length(state.ready) * 2) - 2)) do
+        %{%{%{%{state
+        | results: [[ user_name | [out | state.current_results]]  | state.results]}
+        | guesses: [[ user_name | [numbers | state.current_guesses]]  | state.guesses]}
+        | current_guesses: []}
+        | current_results: []}
+    else
+        %{%{state
+       | current_guesses: [ user_name | [numbers | state.current_guesses]]}
+       | current_results: [ user_name | [out | state.current_results]]}
+    end
 
 
-     cond do
-      word == state.secret ->
-      %{%{%{%{state | guesses: [numbers  | state.guesses]} | results: [out | state.results]} | playing: false} | status: "You Won!"}
+
+     #cond do
+      #word == state.secret ->
+      #%{%{%{%{state | guesses: [numbers  | state.guesses]} | results: [out | state.results]} | playing: false} | status: "You Won!"}
       #length(state.guesses) >= 7 ->
       #%{%{%{%{state | guesses: [numbers | state.guesses]} | results: [out | state.results]} | playing: false} | status: "You lost. The secret was " <> to_string(state.secret)}
-      true ->
-      %{%{state | guesses: [numbers | state.guesses]} | results: [out | state.results]}
+      #true ->
+      #%{%{state | guesses: [numbers | state.guesses]} | results: [out | state.results]}
 
-      end
+      #end
 
       else
       state
@@ -143,7 +154,9 @@ defmodule Bulls.Game do
       players: state.players,
       ready: state.ready,
       observers: state.observers,
-      game_started: state.game_started
+      game_started: state.game_started,
+      current_guesses: state.current_guesses,
+      current_results: state.current_results,
     }
   end
 

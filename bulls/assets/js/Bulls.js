@@ -165,6 +165,8 @@ function Play({state}) {
         status = "";
         playing = true;
         //players= [];
+        current_guesses: [];
+        current_results: [];
         //ready= [];
         //observers= [];
         //game_started= false;
@@ -183,20 +185,27 @@ function Play({state}) {
         ready= [];
         observers= [];
         game_started= false;
+        current_guesses: [];
+        current_results: [];
 
     }
     function isObserver() {
      return (observers.indexOf(name) != -1)
     }
     let pi = 0
-    let turn = 1
+    let turn = guesses.length
     const playerlist = [];
+    //playerlist.push(<tr><td>{getVal(ready,pi+1)}</td><td>{turn}</td><td>{getVal(guesses,index+1)}</td><td>{getVal(results,index+1)}</td></tr>)
+
     for (const [index, value] of guesses.entries()) {
-        playerlist.push(<tr><td>{getVal(ready,pi+1)}</td><td>{turn}</td><td>{getVal(guesses,index+1)}</td><td>{getVal(results,index+1)}</td></tr>)
-        if ((pi + 1) == players.length) {
-           turn = turn + 1
+        for (const [index2, value2] of value.entries()) {
+             if (index2%2 == 0) { // its a players name
+             playerlist.push(<tr><td>{value2}</td><td>{turn}</td><td>{value[index2+1]}</td><td>{results[index][index2+1]}</td></tr>)
+             }
         }
-        pi = (pi+1)%(players.length)
+        turn = turn - 1
+
+        //pi = (pi+1)%(players.length)
     }
     //const playerlist_flat =
     //const playerlist = guesses.map((player) =>
@@ -264,7 +273,9 @@ function Bulls() {
         players: [],
         ready: [],
         observers: [],
-        game_started: false
+        game_started: false,
+        current_guesses: [],
+        current_results: [],
     });
 
 
