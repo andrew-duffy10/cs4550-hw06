@@ -16,6 +16,7 @@ defmodule Bulls.Game do
       game_started: false,
       current_guesses: [],
       current_results: [],
+      winners: [],
     }
   end
 
@@ -43,6 +44,7 @@ defmodule Bulls.Game do
       game_started: false,
       current_guesses: [],
       current_results: [],
+        winners: [],
     }
     else
     state
@@ -110,15 +112,44 @@ defmodule Bulls.Game do
     out = to_string(elem(cow_bulls,0)) <> "A" <> to_string(elem(cow_bulls,1)) <> "B"
 
     if (length(state.current_guesses) >= ((length(state.ready) * 2) - 2)) do
-        %{%{%{%{state
+        cond do
+            (word == state.secret) ->
+         %{%{%{%{%{%{state
+        | playing: false}
+            | status: "Winners:" <> to_string([user_name | state.winners])}
         | results: [[ user_name | [out | state.current_results]]  | state.results]}
         | guesses: [[ user_name | [numbers | state.current_guesses]]  | state.guesses]}
         | current_guesses: []}
         | current_results: []}
+            
+            (length(state.winners) > 0) ->
+        %{%{%{%{%{%{state
+        | playing: false}
+            | status: "Winners: " <> to_string(state.winners)}
+        | results: [[ user_name | [out | state.current_results]]  | state.results]}
+        | guesses: [[ user_name | [numbers | state.current_guesses]]  | state.guesses]}
+        | current_guesses: []}
+        | current_results: []}
+            true ->
+      %{%{%{%{state
+        | results: [[ user_name | [out | state.current_results]]  | state.results]}
+        | guesses: [[ user_name | [numbers | state.current_guesses]]  | state.guesses]}
+        | current_guesses: []}
+        | current_results: []}
+      end
+
     else
+      if (word == state.secret) do
+
+        %{%{%{state
+       | winners: [ user_name | state.winners]}
+       | current_guesses: [ user_name | [numbers | state.current_guesses]]}
+       | current_results: [ user_name | [out | state.current_results]]}
+       else
         %{%{state
        | current_guesses: [ user_name | [numbers | state.current_guesses]]}
        | current_results: [ user_name | [out | state.current_results]]}
+    end
     end
 
 
@@ -157,6 +188,7 @@ defmodule Bulls.Game do
       game_started: state.game_started,
       current_guesses: state.current_guesses,
       current_results: state.current_results,
+        winners: [],
     }
   end
 
@@ -174,7 +206,7 @@ defmodule Bulls.Game do
         code = [num3 | code]
         num4 = Enum.random(possible)
         code = [num4 | code]
-        code
-        #["1","2","3","4"]
+        #code
+        ["1","2","3","4"]
         end
 end

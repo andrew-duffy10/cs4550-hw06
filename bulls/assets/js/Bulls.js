@@ -23,7 +23,7 @@
 import React, { useState, useEffect } from 'react';
 import { ch_join, ch_push, ch_reset, ch_login, ch_ready_up, ch_leave, ch_observe } from './socket';
 
-function Login() {
+function Login({setLeftGame}) {
 
     const [names, setNames] =useState({
         username: "",
@@ -33,6 +33,7 @@ function Login() {
 
     function check_values() {
         if(!(gamename == "" || username == "")) {
+            setLeftGame(false);
             ch_login(username,gamename);
         }
     }
@@ -53,7 +54,7 @@ function Login() {
     )
 }
 
-function Setup({state}) {
+function Setup({state,setLeftGame}) {
     let {name, guesses, results, status, playing, players, ready, observers, game_started } = state;
     function isReady(player) {
     if (ready.indexOf(player) != -1) {
@@ -86,7 +87,7 @@ function Setup({state}) {
 
 }
 
-function Play({state}) {
+function Play({state,setLeftGame}) {
     let {name, guesses, results, status, playing, players, ready, observers, game_started } = state;
     const [text,setText] = useState("");
 
@@ -174,6 +175,7 @@ function Play({state}) {
     }
 
     function leaveGame() {
+        setLeftGame(true);
         ch_leave(name);
 
         name= "";
@@ -238,7 +240,7 @@ function Play({state}) {
             <button onClick={makeGuess} disabled={!state.playing || isObserver()}>Guess</button>
             </p>
             <p>
-            <button onClick={makePass} disabled={isObserver()}>Pass</button>
+            <button onClick={makePass} disabled={!state.playing || isObserver()}>Pass</button>
             </p>
 
             <p>
@@ -277,6 +279,7 @@ function Bulls() {
         current_guesses: [],
         current_results: [],
     });
+    const [leftgame,setLeftGame]=useState(false)
 
 
     useEffect(() => {
@@ -285,13 +288,13 @@ function Bulls() {
 
     let body = null;
 
-    if (state.name == "") {
-        body = <Login />;
+    if (state.name == "" || leftgame) {
+        body = <Login setLeftGame = {setLeftGame} />;
     } else if (state.ready.length != state.players.length && !state.game_started){
-        body = <Setup state = {state} />;
+        body = <Setup state = {state} setLeftGame = {setLeftGame} />;
     }
     else if ((state.ready.length == state.players.length && state.ready.length != 0) || state.game_started){
-        body = <Play state = {state} />;
+        body = <Play state = {state} setLeftGame = {setLeftGame}/>;
     } else {
         body = <Login />;
     }
