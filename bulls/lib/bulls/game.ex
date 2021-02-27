@@ -16,7 +16,7 @@ defmodule Bulls.Game do
       game_started: false,
       current_guesses: [],
       current_results: [],
-      winners: [],
+      winners: [], 
     }
   end
 
@@ -116,7 +116,7 @@ defmodule Bulls.Game do
             (word == state.secret) ->
          %{%{%{%{%{%{state
         | playing: false}
-            | status: "Winners:" <> to_string([user_name | state.winners])}
+            | status: "Winners: " <> to_string([user_name | state.winners])}
         | results: [[ user_name | [out | state.current_results]]  | state.results]}
         | guesses: [[ user_name | [numbers | state.current_guesses]]  | state.guesses]}
         | current_guesses: []}
@@ -206,7 +206,7 @@ defmodule Bulls.Game do
         code = [num3 | code]
         num4 = Enum.random(possible)
         code = [num4 | code]
-        #code
-        ["1","2","3","4"]
+        code
+        #["1","2","3","4"]
         end
 end
